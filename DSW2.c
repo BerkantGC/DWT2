@@ -14,6 +14,72 @@ typedef struct{
 	NODE root;
 } BST_t[1], *BST;
 
+typedef struct LINKED_NODE_s
+{
+	struct LINKED_NODE_s *next;
+	void * data;
+} LINKED_NODE_t[1], *LINKED_NODE;
+
+typedef struct LINKED_STACK_s
+{
+	LINKED_NODE head;
+} LINKED_STACK_t[1], *LINKED_STACK;
+
+LINKED_STACK linked_stack_init()
+{
+	LINKED_STACK stack = (LINKED_STACK)malloc(sizeof(LINKED_STACK_t));
+
+	if(stack != NULL)
+	{
+		stack->head = NULL;
+	}
+
+	return stack;
+}
+
+LINKED_STACK push(LINKED_STACK stack, void* data)
+{
+	LINKED_NODE node = (LINKED_NODE)malloc(sizeof(LINKED_NODE_t));
+
+	node->data = data;
+	node->next = NULL;
+
+	if(stack != NULL)
+	{
+		if(stack->head == NULL)
+		{
+			stack->head = node;
+		}
+		else{
+			node->next = stack->head;
+			stack->head = node;
+		}
+	}
+
+	return stack;
+}
+
+void* pop(LINKED_STACK stack)
+{
+	void *data;
+
+	if(stack != NULL)
+	{
+		if(stack->head != NULL)
+		{
+			LINKED_NODE tmp = stack->head;
+
+			data = tmp->data;
+
+			stack->head = tmp->next;
+
+			free(tmp);
+		}
+		else printf("\nEmpty stack\n");
+	}
+
+	return data;
+}
 
 void inorder(NODE node){
 	if(node != NULL){
@@ -21,6 +87,40 @@ void inorder(NODE node){
 		printf("%d ", node->key);
 		inorder(node->right);
 	}
+}
+
+void preorder(NODE node){
+	if(node != NULL){
+		preorder(node->right);
+		printf("%d ", node->key);
+		preorder(node->left);
+	}
+}
+
+void inorder_iterative(NODE node)
+{
+	LINKED_STACK stack = linked_stack_init();
+
+	NODE iter = node;
+
+	push(stack, (NODE)node);
+
+	while(stack->head != NULL)
+	{
+		iter = (NODE)pop(stack);
+
+		printf("%d ", iter->key);
+
+		if(iter->left != NULL)
+			push(stack, (NODE)iter->left);
+		
+		if(iter->right != NULL)
+			push(stack, (NODE)iter->right);	
+			
+		free(iter);
+	}
+
+	free(stack);
 }
 
 void bst_print(NODE node, int l){
@@ -300,7 +400,6 @@ void backbone(BST tree)
     NODE gp = (NODE)tree;
     NODE parent = tree->root;
 
-    int i = 1;
     while(parent != NULL)
     {
         if(parent->left != NULL)
@@ -312,9 +411,12 @@ void backbone(BST tree)
 
             gp->right = child; 
         }
-        else{
+
+        else
+		{
         gp = parent; 
         }
+
         parent = gp->right;
     }
 }
@@ -351,6 +453,7 @@ int getDataCount(BST tree)
     }
     return counter;
 }
+
 void leftRotation(NODE gp, NODE p , NODE c)
 {
     NODE temp = c->left;
@@ -382,14 +485,17 @@ void balance(BST tree)
 {
     int counter = getDataCount(tree);
 
-    int m = powOf2(floorLogarithm(counter)+1) - 1;
+    int m = powOf2(floorLogarithm(counter+1)) - 1;
     int k = counter - m;
 
     makeLeftRotations(tree, k);
 
+	printf("k : %d \n", k);
+
     while(m > 1)
     {
         m /= 2;
+		printf("m: %d \n", m);
         makeLeftRotations(tree, m);
     }
 }
@@ -397,32 +503,45 @@ void balance(BST tree)
 int main() {
 	BST t1 = bst_init();
 	
-	bst_insert(t1, 40, NULL);
-	bst_insert(t1, 67, NULL);
+	bst_insert(t1, 1, NULL);
+	bst_insert(t1, 3, NULL);
+	bst_insert(t1, 10, NULL);
+	bst_insert(t1, 15, NULL);
 	bst_insert(t1, 23, NULL);
 	bst_insert(t1, 35, NULL);
-	bst_insert(t1, 3, NULL);
-	bst_insert(t1, 1, NULL);
-	bst_insert(t1, 15, NULL);
-	bst_insert(t1, 10, NULL);
 	bst_insert(t1, 38, NULL);
 	bst_insert(t1, 39, NULL);
+	bst_insert(t1, 38, NULL);
+	bst_insert(t1, 40, NULL);
 
-	bst_insert(t1, 82, NULL);
-	bst_insert(t1, 63, NULL);
 	bst_insert(t1, 42, NULL);
-	bst_insert(t1, 90, NULL);
+	bst_insert(t1, 63, NULL);
+	bst_insert(t1, 67, NULL);
+	bst_insert(t1, 82, NULL);
 
 	printf("original : \n");	
     bst_print(t1->root, 0);
 
 	int chosen = 40;
-	printf("\n\n%d deleted version: \n\n", chosen);
+	//printf("\n\n%d deleted version: \n\n", chosen);
 
-	bst_delete_balanced_recursive(t1->root, (NODE)t1, chosen,  NULL);
+	// printf("backbone : \n");	
+	// backbone(t1);
+	// bst_print(t1->root, 0);
+
+	printf("\n\n\nbalanced : \n");	
+	balance(t1);
+	bst_print(t1->root, 0);
+
+	printf("\nPreorder: \n");
+	preorder(t1->root);
+
+	printf("\nInorder: \n");
+	inorder(t1->root);
+
 	//bst_delete_unbalanced_iterative(t1, chosen,  NULL);
-
-    bst_print(t1->root, 0);
+	printf("\n\ninorder Iterative\n");
+	inorder_iterative(t1->root);
 
 	return 0;
 }
