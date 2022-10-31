@@ -97,7 +97,7 @@ void preorder(NODE node){
 	}
 }
 
-void inorder_iterative(NODE node)
+void traversal_iterative(NODE node)
 {
 	LINKED_STACK stack = linked_stack_init();
 
@@ -541,7 +541,7 @@ int main() {
 
 	//bst_delete_unbalanced_iterative(t1, chosen,  NULL);
 	printf("\n\ninorder Iterative\n");
-	inorder_iterative(t1->root);
+	traversal_iterative(t1->root);
 
 	return 0;
 }
