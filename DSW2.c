@@ -4,8 +4,8 @@
 
 typedef struct NODE_s *NODE;
 typedef struct NODE_s{
-	NODE right;
 	NODE left;
+	NODE right;
 	int key;
 	void *data;
 } NODE_t[1];
@@ -371,24 +371,28 @@ void bst_delete_balanced_recursive(NODE curr, NODE parent, int key, void *data)
 			/* TWO CHILDREN */
 			else{
 				NODE max = curr->left;
-				NODE prevMax;
+				NODE prevMax = max;
 
 				while(max->right != NULL){
 					prevMax = max;
 					max = max->right;
 				}
-				prevMax->right = NULL;
+
+				prevMax->right = max->left;
 
 				max->right = curr->right;
 
-				if(curr == parent->left){
-					parent->left = max;
+				if(curr->left != max)
+				{
+					max->left = curr->left;
 				}
-				else{
-					parent->right = max;
+				if(curr == parent->left){
+					parent->left = curr->left;
 				}
 
-				max->left = curr->left;
+				else{
+					parent->right = curr->left;
+				}
 				
 			}
 		}
@@ -448,7 +452,7 @@ int getDataCount(BST tree)
     int counter = 0;
     while(iter != NULL)
     {
-        iter = iter->right;
+        iter = iter->left;
         counter++;
     }
     return counter;
@@ -481,7 +485,7 @@ void makeLeftRotations(BST tree, int size)
     }
 }
 
-void balance(BST tree)
+void balanceWithLeftRotations(BST tree)
 {
     int counter = getDataCount(tree);
 
@@ -490,58 +494,80 @@ void balance(BST tree)
 
     makeLeftRotations(tree, k);
 
-	printf("k : %d \n", k);
+    while(m > 1)
+    {
+        m /= 2;
+
+        makeLeftRotations(tree, m);
+    }
+}
+
+void rightRotation(NODE gp, NODE parent, NODE child)
+{
+	child = parent->left;
+		parent->left = child->right;
+		child->right = parent;
+
+		gp->left = child;
+}
+
+void makeRightRotations(BST tree, int size)
+{
+    NODE gp = (NODE)tree;
+    NODE p = tree->root;
+    NODE c = p->left;
+
+    while(size > 0)
+    {
+		rightRotation(gp, p, c);
+		
+
+        gp = c;
+        p = c->left;
+        c = p->left;
+
+        size--;
+    }
+}
+
+void balanceWithRightRotations(BST tree, int counter)
+{
+    int m = powOf2(floorLogarithm(counter+1)) - 1;
+    int k = counter - m;
+
+    makeRightRotations(tree, k);
 
     while(m > 1)
     {
         m /= 2;
-		printf("m: %d \n", m);
-        makeLeftRotations(tree, m);
+
+        makeRightRotations(tree, m);
     }
 }
 
 int main() {
 	BST t1 = bst_init();
-	
-	bst_insert(t1, 1, NULL);
-	bst_insert(t1, 3, NULL);
-	bst_insert(t1, 10, NULL);
-	bst_insert(t1, 15, NULL);
-	bst_insert(t1, 23, NULL);
-	bst_insert(t1, 35, NULL);
-	bst_insert(t1, 38, NULL);
-	bst_insert(t1, 39, NULL);
-	bst_insert(t1, 38, NULL);
 	bst_insert(t1, 40, NULL);
-
-	bst_insert(t1, 42, NULL);
-	bst_insert(t1, 63, NULL);
 	bst_insert(t1, 67, NULL);
+	bst_insert(t1, 39, NULL);
+	bst_insert(t1, 15, NULL);
+	bst_insert(t1, 3, NULL);
 	bst_insert(t1, 82, NULL);
+	bst_insert(t1, 42, NULL);
+	bst_insert(t1, 38, NULL);
+	bst_insert(t1, 35, NULL);
+	bst_insert(t1, 23, NULL);
+	bst_insert(t1, 10, NULL);
+	bst_insert(t1, 1, NULL);
 
 	printf("original : \n");	
     bst_print(t1->root, 0);
 
 	int chosen = 40;
-	//printf("\n\n%d deleted version: \n\n", chosen);
+	printf("\n\n\n\n");
 
-	// printf("backbone : \n");	
-	// backbone(t1);
-	// bst_print(t1->root, 0);
-
-	printf("\n\n\nbalanced : \n");	
-	balance(t1);
+	bst_delete_balanced_recursive(t1->root, (NODE)t1, 40, NULL);
 	bst_print(t1->root, 0);
-
-	printf("\nPreorder: \n");
-	preorder(t1->root);
-
-	printf("\nInorder: \n");
-	inorder(t1->root);
-
-	//bst_delete_unbalanced_iterative(t1, chosen,  NULL);
-	printf("\n\ninorder Iterative\n");
-	traversal_iterative(t1->root);
 
 	return 0;
 }
